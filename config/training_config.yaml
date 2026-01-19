@@ -1,0 +1,58 @@
+# Training Configuration for Human Activity Detection
+# YOLO Model Training Parameters
+
+# Model settings
+model:
+  name: "models/yolo11n.pt"  # Options: yolo11n.pt, yolo11s.pt, yolo11m.pt, yolo11l.pt, yolo11x.pt
+  pretrained: true
+
+# Data settings
+data:
+  yaml_path: "config/data.yaml"
+  train_split: 0.8
+  val_split: 0.15
+  test_split: 0.05
+
+# Training hyperparameters
+training:
+  epochs: 200
+  batch_size: 8  # Adjust based on GPU memory (MX450 has 2GB, so 8 is reasonable)
+  imgsz: 640
+  device: "0"  # GPU device ID, use "cpu" for CPU training
+  workers: 4
+  cache: true  # Cache images in RAM for faster training
+  
+# Augmentation settings
+augmentation:
+  enabled: true
+  mixup: 0.1
+  flipud: 0.1  # Vertical flip probability
+  fliplr: 0.5  # Horizontal flip probability
+  mosaic: 1.0  # Mosaic augmentation probability
+  copy_paste: 0.0  # Copy-paste augmentation probability
+
+# Optimization settings
+optimization:
+  amp: true  # Automatic Mixed Precision (FP16) - reduces memory usage
+  multi_scale: true  # Multi-scale training
+  rect: true  # Rectangular training
+  resume: false  # Resume from checkpoint
+
+# Validation settings
+validation:
+  conf: 0.01  # Confidence threshold
+  iou: 0.5  # IoU threshold for NMS
+  save_json: true
+  plots: true
+
+# Output settings
+output:
+  project: "outputs/runs"
+  name: "human_activity_detection"
+  exist_ok: true
+  save_period: 10  # Save checkpoint every N epochs
+
+# Logging
+logging:
+  tensorboard: true
+  verbose: true

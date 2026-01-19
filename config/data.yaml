@@ -1,0 +1,35 @@
+# Dataset configuration for Human Activity Detection
+# Paths are relative to project root
+
+train: data/train/images
+val: data/valid/images
+test: data/test/images
+
+# Number of classes
+nc: 23
+
+# Class names
+names: 
+  - 'Battery low'
+  - 'Cleaning'
+  - 'Loitering'
+  - 'Mopping'
+  - 'checking_bag'
+  - 'eating'
+  - 'holding_walkiee_talkiee'
+  - 'keeping_walkie_talkiee_charging'
+  - 'operating_comp'
+  - 'patient on stretcher'
+  - 'patient on wheel chair'
+  - 'searching'
+  - 'sitting'
+  - 'sitting on Desk'
+  - 'sleeping'
+  - 'standing'
+  - 'stretcher attendant'
+  - 'talking'
+  - 'triple intersection'
+  - 'using_phone'
+  - 'walking'
+  - 'wheelchair attendant'
+  - 'working'

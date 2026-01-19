@@ -1,0 +1,61 @@
+[project]
+name = "human-activity-detection"
+version = "1.0.0"
+description = "A production-ready computer vision pipeline for detecting human activities using YOLO"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+    {name = "Adnan Sattar"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+dependencies = [
+    "ultralytics>=8.3.0",
+    "opencv-python>=4.8.0",
+    "numpy>=1.24.0",
+    "pillow>=10.0.0",
+    "pyyaml>=6.0",
+    "tqdm>=4.66.0",
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+    "pandas>=2.0.0",
+    "tensorboard>=2.14.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "black>=23.7.0",
+    "flake8>=6.1.0",
+]
+
+[project.scripts]
+human-activity-train = "src.train:train_model"
+human-activity-inference = "src.inference:run_inference"
+human-activity-evaluate = "src.evaluate:evaluate_model"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = []
+
+[tool.black]
+line-length = 88
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312', 'py313']
+
+[tool.ruff]
+line-length = 88
+target-version = "py38"

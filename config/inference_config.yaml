@@ -1,0 +1,37 @@
+# Inference Configuration for Human Activity Detection
+
+# Model settings
+model:
+  checkpoint_path: "outputs/models/Human_Activity_model.pt"  # Path to trained model
+  conf_threshold: 0.25  # Confidence threshold for detections
+  iou_threshold: 0.45  # IoU threshold for NMS
+
+# Input settings
+input:
+  source: "data/test/images"  # Can be: image path, video path, directory, webcam (0), or RTSP stream
+  imgsz: 640  # Inference image size
+
+# Output settings
+output:
+  save_dir: "outputs/inference"
+  save_txt: true  # Save results as .txt files
+  save_conf: true  # Save confidence scores
+  save_crop: false  # Save cropped detection images
+  show_labels: true
+  show_conf: true
+  line_width: 2  # Bounding box line width
+
+# Video settings (if input is video)
+video:
+  save: true
+  format: "mp4"  # Options: mp4, avi, mkv
+  fps: 30  # Output FPS (will use source FPS if available)
+
+# Display settings
+display:
+  show: true  # Show results in window
+  wait_key: 1  # Wait key delay (ms), 0 = wait for key press
+
+# Device settings
+device:
+  gpu_id: 0  # GPU device ID, use "cpu" for CPU inference

@@ -1,0 +1,82 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+.uv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# PyTorch
+*.pth
+*.pt
+!models/yolo11n.pt  # Keep base model
+
+# Data
+data/train/
+data/valid/
+data/test/
+
+# Video files (keep structure but ignore content)
+*.mp4
+*.avi
+*.mkv
+*.mov
+!archive/*.mp4  # Allow example videos in archive if needed
+
+# Outputs
+outputs/
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Model checkpoints (keep structure but ignore large files)
+outputs/models/*.pt
+!outputs/models/.gitkeep
+
+# Training runs
+outputs/runs/
+
+# Inference results
+outputs/inference/
+
+# Temporary files
+*.tmp
+*.temp
+
+# UV
+.uv/
+uv.lock
