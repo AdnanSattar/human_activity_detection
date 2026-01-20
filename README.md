@@ -83,7 +83,7 @@ python scripts/verify_setup.py
 
 Place your dataset in the following structure:
 
-```
+```text
 data/
 ├── train/
 │   ├── images/
@@ -131,7 +131,7 @@ python -m src.inference --source data/test/images  # Directory
 
 ## 📁 Project Structure
 
-```
+```text
 Human-Activity/
 ├── config/                 # Configuration files
 │   ├── data.yaml          # Dataset configuration
@@ -183,7 +183,7 @@ Key parameters:
 Key parameters:
 
 - `model.checkpoint_path`: Path to trained model
-- `model.conf_threshold`: Confidence threshold (0.25 default)
+- `model.conf_threshold`: Confidence threshold (0.3 default in this repo)
 - `input.source`: Input source (image, video, directory, or webcam)
 - `output.save_dir`: Output directory
 
@@ -233,6 +233,7 @@ If you encounter CUDA out of memory errors:
 2. Reduce `imgsz` (image size)
 3. Disable `cache` option
 4. Use a smaller model (yolo11n.pt instead of yolo11s.pt)
+5. On Windows, keep `workers: 0` or `workers: 1` (higher values can trigger paging-file errors)
 
 ### Model Not Found
 
@@ -241,6 +242,16 @@ If inference fails with "Model not found":
 1. Train a model first: `python -m src.train`
 2. Update `model.checkpoint_path` in `config/inference_config.yaml`
 3. Check that model exists in `outputs/models/`
+
+### Poor Detection Accuracy
+
+If you see incorrect activity labels or missing detections:
+
+1. **Sanity check epochs**: very low epochs (e.g., 1) often produces **no detections** on video. Use this only to confirm the pipeline runs.
+2. **Train longer**: for the MX450 (2GB), a practical starting point is **50 epochs**. Increase further if metrics keep improving.
+3. **Tune confidence**: lower `model.conf_threshold` (e.g., 0.1–0.3) to see more detections; raise it (e.g., 0.5) to reduce false positives.
+4. **Verify labels visually**: open `outputs/runs/.../labels.jpg` to confirm boxes and class IDs look correct.
+5. **Dataset**: Get the dataset from [Roboflow](https://universe.roboflow.com/cctv-rfavb/human-activity-kynyq) and ensure it’s in the `data/` structure described above.
 
 ### Path Issues
 

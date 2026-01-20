@@ -1,0 +1,28 @@
+names:
+- Battery low
+- Cleaning
+- Loitering
+- Mopping
+- checking_bag
+- eating
+- holding_walkiee_talkiee
+- keeping_walkie_talkiee_charging
+- operating_comp
+- patient on stretcher
+- patient on wheel chair
+- searching
+- sitting
+- sitting on Desk
+- sleeping
+- standing
+- stretcher attendant
+- talking
+- triple intersection
+- using_phone
+- walking
+- wheelchair attendant
+- working
+nc: 23
+test: E:/codebase/cv-projs/Human-Activity/./data/test/images
+train: E:/codebase/cv-projs/Human-Activity/./data/train/images
+val: E:/codebase/cv-projs/Human-Activity/./data/valid/images

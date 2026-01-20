@@ -3,7 +3,7 @@
 
 # Model settings
 model:
-  name: "models/yolo11n.pt"  # Options: yolo11n.pt, yolo11s.pt, yolo11m.pt, yolo11l.pt, yolo11x.pt
+  name: "models/yolo11n.pt" # Options: yolo11n.pt, yolo11s.pt, yolo11m.pt, yolo11l.pt, yolo11x.pt
   pretrained: true
 
 # Data settings
@@ -15,33 +15,35 @@ data:
 
 # Training hyperparameters
 training:
-  epochs: 200
-  batch_size: 8  # Adjust based on GPU memory (MX450 has 2GB, so 8 is reasonable)
+  epochs: 200 # Minimum viable epochs for decent results (200+ recommended for production)
+  batch_size: 8 # Adjust based on GPU memory (MX450 has 2GB, so 8 is reasonable)
   imgsz: 640
-  device: "0"  # GPU device ID, use "cpu" for CPU training
-  workers: 4
-  cache: true  # Cache images in RAM for faster training
-  
+  device: "0" # GPU device ID, use "cpu" for CPU training
+  workers: 1 # Set to 0-1 on Windows to avoid multiprocessing memory issues (1 worker worked fine)
+  cache: false # MUST be false to avoid paging file errors (not enough RAM available)
+  lr0: 0.001 # Initial learning rate (reduced from default 0.01 to prevent NaN losses)
+  lrf: 0.01 # Final learning rate factor
+
 # Augmentation settings
 augmentation:
   enabled: true
   mixup: 0.1
-  flipud: 0.1  # Vertical flip probability
-  fliplr: 0.5  # Horizontal flip probability
-  mosaic: 1.0  # Mosaic augmentation probability
-  copy_paste: 0.0  # Copy-paste augmentation probability
+  flipud: 0.1 # Vertical flip probability
+  fliplr: 0.5 # Horizontal flip probability
+  mosaic: 1.0 # Mosaic augmentation probability
+  copy_paste: 0.0 # Copy-paste augmentation probability
 
 # Optimization settings
 optimization:
-  amp: true  # Automatic Mixed Precision (FP16) - reduces memory usage
-  multi_scale: true  # Multi-scale training
-  rect: true  # Rectangular training
-  resume: false  # Resume from checkpoint
+  amp: false # Automatic Mixed Precision (FP16) - DISABLED to prevent NaN losses
+  multi_scale: true # Multi-scale training
+  rect: true # Rectangular training
+  resume: false # Resume from checkpoint
 
 # Validation settings
 validation:
-  conf: 0.01  # Confidence threshold
-  iou: 0.5  # IoU threshold for NMS
+  conf: 0.01 # Confidence threshold
+  iou: 0.5 # IoU threshold for NMS
   save_json: true
   plots: true
 
@@ -50,7 +52,7 @@ output:
   project: "outputs/runs"
   name: "human_activity_detection"
   exist_ok: true
-  save_period: 10  # Save checkpoint every N epochs
+  save_period: 10 # Save checkpoint every N epochs (with 50 epochs, saves at 10, 20, 30, 40, 50)
 
 # Logging
 logging:

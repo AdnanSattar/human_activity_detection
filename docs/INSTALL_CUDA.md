@@ -45,7 +45,7 @@ python scripts/verify_setup.py
 
 Expected output:
 
-```
+```text
 PyTorch Version: 2.x.x+cu124
 CUDA Available: True
 CUDA Version: 12.4
@@ -104,9 +104,9 @@ If you get driver version errors:
 1. **Use smallest model**: `yolo11n.pt` (nano)
 2. **Batch size**: 4-8 (test and adjust)
 3. **Image size**: 640 (default) or 512 if OOM
-4. **Enable AMP**: `amp: true` (saves memory)
-5. **Disable cache**: `cache: false` if OOM
-6. **Reduce workers**: `workers: 2` instead of 4
+4. **AMP**: if you see instability/NaNs, keep `amp: false` (this repo defaults to `false` for stability)
+5. **Cache**: set `cache: false` if RAM is tight or you hit paging-file errors
+6. **Workers (Windows)**: keep `workers: 0` or `workers: 1` to avoid paging-file / multiprocessing issues
 
 ## Alternative: CPU Training
 

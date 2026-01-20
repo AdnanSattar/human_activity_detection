@@ -4,8 +4,10 @@ Training module for Human Activity Detection using YOLO.
 
 import argparse
 import os
+import tempfile
 from pathlib import Path
 
+import yaml
 from ultralytics import YOLO
 
 from src.utils import (
@@ -75,6 +77,29 @@ def train_model(config_path: str = "config/training_config.yaml"):
     if not os.path.isabs(data_yaml):
         data_yaml = os.path.join(project_root, data_yaml)
 
+    # Update data.yaml paths to be absolute before passing to YOLO
+    # YOLO resolves paths relative to the config file location, so we need absolute paths
+    import yaml
+
+    with open(data_yaml, "r") as f:
+        data_config = yaml.safe_load(f)
+
+    # Convert relative paths to absolute
+    for key in ["train", "val", "test"]:
+        if key in data_config and not os.path.isabs(data_config[key]):
+            data_config[key] = os.path.join(project_root, data_config[key]).replace(
+                "\\", "/"
+            )
+
+    # Write updated config to temp file
+    import tempfile
+
+    temp_data_yaml = os.path.join(project_root, "config", "data_temp.yaml")
+    with open(temp_data_yaml, "w") as f:
+        yaml.dump(data_config, f, default_flow_style=False)
+
+    data_yaml = temp_data_yaml
+
     # Prepare training arguments
     train_args = {
         "data": data_yaml,
@@ -98,6 +123,12 @@ def train_model(config_path: str = "config/training_config.yaml"):
         "iou": config["validation"]["iou"],
         "multi_scale": config["optimization"]["multi_scale"],
     }
+
+    # Add learning rate if specified
+    if "lr0" in config["training"]:
+        train_args["lr0"] = config["training"]["lr0"]
+    if "lrf" in config["training"]:
+        train_args["lrf"] = config["training"]["lrf"]
 
     # Add augmentation parameters
     if config["augmentation"]["enabled"]:
@@ -127,9 +158,15 @@ def train_model(config_path: str = "config/training_config.yaml"):
         model.save(model_save_path)
         logger.info(f"Model saved to: {model_save_path}")
 
-        # Perform validation
-        logger.info("Running validation...")
-        model.val(save_json=True)
+        # Perform validation (skip if memory issues)
+        try:
+            logger.info("Running validation...")
+            model.val(save_json=True)
+        except Exception as e:
+            logger.warning(f"Validation skipped due to error: {str(e)}")
+            logger.info(
+                "You can run validation separately with: python -m src.evaluate"
+            )
 
         # Print results summary
         logger.info("\n" + "=" * 50)
