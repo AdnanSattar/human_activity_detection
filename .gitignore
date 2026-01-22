@@ -67,11 +67,22 @@ Thumbs.db
 outputs/models/*.pt
 !outputs/models/.gitkeep
 
-# Training runs
-outputs/runs/
+# Training runs (but keep important visualization images)
+outputs/runs/**/*
+!outputs/runs/human_activity_detection/results.png
+!outputs/runs/human_activity_detection/confusion_matrix.png
+!outputs/runs/human_activity_detection/confusion_matrix_normalized.png
+!outputs/runs/human_activity_detection/BoxPR_curve.png
+!outputs/runs/human_activity_detection/BoxF1_curve.png
+!outputs/runs/human_activity_detection/BoxP_curve.png
+!outputs/runs/human_activity_detection/BoxR_curve.png
+!outputs/runs/human_activity_detection/val_batch0_pred.jpg
+!outputs/runs/human_activity_detection/val_batch1_pred.jpg
+!outputs/runs/human_activity_detection/val_batch2_pred.jpg
 
-# Inference results
-outputs/inference/
+# Inference results (but keep output video)
+outputs/inference/**/*
+!outputs/inference/output_video.mp4
 
 # Temporary files
 *.tmp

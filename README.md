@@ -5,6 +5,26 @@
 
 A production-ready computer vision pipeline for detecting human activities using YOLO (YOLOv11). This project implements a complete training, evaluation, and inference pipeline optimized for GPU acceleration with CUDA support.
 
+## 📹 Inference Results
+
+### Example Detection
+
+![Walking Detection](images/walking.png)
+*Example detection: Walking activity in video*
+
+### Output Video
+
+**Inference Output**: [View Video](outputs/inference/output_video.mp4)
+
+*Inference output video showing human activity detection (download to view).*
+
+### Performance
+
+- **Average detections per frame**: 2-4
+- **Processing speed**: ~15ms per frame on MX450 GPU
+- **Detected activities**: Standing, Walking, Using Phone
+- **Output video**: `outputs/inference/output_video.mp4`
+
 ## 🎯 Features
 
 - **YOLO-based Detection**: Uses YOLOv11 for fast and accurate human activity detection
@@ -250,17 +270,6 @@ Training logs are saved to `logs/human_activity_detection.log`.
 
 ![Validation Batch 1](outputs/runs/human_activity_detection/val_batch1_pred.jpg)
 *Validation predictions - Batch 1*
-
-#### Inference Example
-
-![Walking Detection](images/walking.png)
-*Example detection: Walking activity in video*
-
-#### Output Video
-
-**Inference Output**: [View Video](outputs/inference/output_video.mp4)
-
-Inference output video showing human activity detection (download to view).
 
 **Best Model Metrics**:
 
