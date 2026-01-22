@@ -130,15 +130,104 @@ def train_model(config_path: str = "config/training_config.yaml"):
     if "lrf" in config["training"]:
         train_args["lrf"] = config["training"]["lrf"]
 
-    # Add augmentation parameters
+    # Add augmentation parameters (aggressive for rare classes)
     if config["augmentation"]["enabled"]:
-        train_args.update(
-            {
-                "mixup": config["augmentation"]["mixup"],
-                "flipud": config["augmentation"]["flipud"],
-                "fliplr": config["augmentation"]["fliplr"],
-            }
-        )
+        aug_params = {
+            "mixup": config["augmentation"]["mixup"],
+            "flipud": config["augmentation"]["flipud"],
+            "fliplr": config["augmentation"]["fliplr"],
+        }
+        # Add additional augmentation parameters if specified
+        if "copy_paste" in config["augmentation"]:
+            aug_params["copy_paste"] = config["augmentation"]["copy_paste"]
+        if "hsv_h" in config["augmentation"]:
+            aug_params["hsv_h"] = config["augmentation"]["hsv_h"]
+        if "hsv_s" in config["augmentation"]:
+            aug_params["hsv_s"] = config["augmentation"]["hsv_s"]
+        if "hsv_v" in config["augmentation"]:
+            aug_params["hsv_v"] = config["augmentation"]["hsv_v"]
+        if "degrees" in config["augmentation"]:
+            aug_params["degrees"] = config["augmentation"]["degrees"]
+        if "translate" in config["augmentation"]:
+            aug_params["translate"] = config["augmentation"]["translate"]
+        if "scale" in config["augmentation"]:
+            aug_params["scale"] = config["augmentation"]["scale"]
+        if "shear" in config["augmentation"]:
+            aug_params["shear"] = config["augmentation"]["shear"]
+        if "perspective" in config["augmentation"]:
+            aug_params["perspective"] = config["augmentation"]["perspective"]
+        if "erasing" in config["augmentation"]:
+            aug_params["erasing"] = config["augmentation"]["erasing"]
+        train_args.update(aug_params)
+
+    # Implement class weighting if enabled
+    if config["training"].get("class_weights", False):
+        logger.info("Calculating class weights for imbalanced dataset...")
+        try:
+            # Load data config to get class names
+            with open(data_yaml, "r") as f:
+                data_config = yaml.safe_load(f)
+
+            # Count instances per class in training labels
+            train_labels_dir = os.path.join(project_root, "data", "train", "labels")
+            class_counts = {}
+            total_instances = 0
+
+            if os.path.exists(train_labels_dir):
+                for label_file in os.listdir(train_labels_dir):
+                    if label_file.endswith(".txt"):
+                        label_path = os.path.join(train_labels_dir, label_file)
+                        with open(label_path, "r") as f:
+                            for line in f:
+                                parts = line.strip().split()
+                                if len(parts) >= 5:
+                                    class_id = int(parts[0])
+                                    class_counts[class_id] = (
+                                        class_counts.get(class_id, 0) + 1
+                                    )
+                                    total_instances += 1
+
+                if total_instances > 0:
+                    # Calculate inverse frequency weights
+                    num_classes = len(data_config.get("names", []))
+                    class_weights = []
+
+                    for class_id in range(num_classes):
+                        count = class_counts.get(class_id, 1)  # Avoid division by zero
+                        # Inverse frequency weighting: more weight for rare classes
+                        weight = total_instances / (num_classes * count)
+                        class_weights.append(weight)
+
+                    # Normalize weights (optional, YOLO handles this internally)
+                    max_weight = max(class_weights) if class_weights else 1.0
+                    class_weights = [w / max_weight for w in class_weights]
+
+                    logger.info(
+                        f"Class weights calculated (total instances: {total_instances}):"
+                    )
+                    for i, (class_name, weight) in enumerate(
+                        zip(data_config.get("names", []), class_weights)
+                    ):
+                        count = class_counts.get(i, 0)
+                        logger.info(
+                            f"  {class_name}: weight={weight:.3f}, instances={count}"
+                        )
+
+                    # Note: YOLO doesn't directly support class_weights parameter in train()
+                    # We'll use focal loss or adjust loss function if available
+                    # For now, we'll log the weights for reference
+                    logger.info(
+                        "Note: Class weights are calculated but YOLO uses focal loss by default."
+                    )
+                    logger.info(
+                        "Consider using focal loss gamma parameter to emphasize hard examples."
+                    )
+
+        except Exception as e:
+            logger.warning(f"Could not calculate class weights: {str(e)}")
+            logger.info(
+                "Continuing without explicit class weighting (YOLO uses focal loss by default)"
+            )
 
     logger.info("Training parameters:")
     for key, value in train_args.items():

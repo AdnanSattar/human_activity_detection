@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 
 import cv2
+import numpy as np
 from ultralytics import YOLO
 
 from src.utils import (
@@ -17,6 +18,81 @@ from src.utils import (
     print_cuda_info,
     setup_logging,
 )
+
+
+def filter_false_positives(
+    result,
+    min_area_ratio=0.01,
+    max_area_ratio=0.8,
+    min_aspect_ratio=0.3,
+    max_aspect_ratio=3.0,
+):
+    """
+    Filter out false positive detections (non-human objects) based on bounding box characteristics.
+
+    Args:
+        result: YOLO result object
+        min_area_ratio: Minimum bounding box area as ratio of image area (default: 0.01 = 1%)
+        max_area_ratio: Maximum bounding box area as ratio of image area (default: 0.8 = 80%)
+        min_aspect_ratio: Minimum height/width ratio (humans are typically taller than wide)
+        max_aspect_ratio: Maximum height/width ratio
+
+    Returns:
+        Filtered result object
+    """
+    if result.boxes is None or len(result.boxes) == 0:
+        return result
+
+    # Get image dimensions
+    img_height, img_width = result.orig_shape[:2]
+    img_area = img_height * img_width
+
+    # Get boxes data
+    boxes = result.boxes.xyxy.cpu().numpy()  # [x1, y1, x2, y2]
+    confidences = result.boxes.conf.cpu().numpy()
+    classes = result.boxes.cls.cpu().numpy()
+
+    # Filter boxes
+    valid_indices = []
+    for i, box in enumerate(boxes):
+        x1, y1, x2, y2 = box
+        width = x2 - x1
+        height = y2 - y1
+        area = width * height
+        area_ratio = area / img_area
+
+        # Calculate aspect ratio (height/width)
+        if width > 0:
+            aspect_ratio = height / width
+        else:
+            aspect_ratio = 0
+
+        # Filter criteria:
+        # 1. Area should be reasonable (not too small, not too large)
+        # 2. Aspect ratio should be reasonable for humans (typically 1.5-3.0, but allow wider range)
+        # 3. Minimum size check (humans should be at least a certain size)
+        if (
+            min_area_ratio <= area_ratio <= max_area_ratio
+            and min_aspect_ratio <= aspect_ratio <= max_aspect_ratio
+            and width > 20
+            and height > 30
+        ):  # Minimum pixel dimensions
+            valid_indices.append(i)
+
+    # Filter the result using boolean indexing
+    if len(valid_indices) < len(boxes):
+        if len(valid_indices) > 0:
+            # Create boolean mask for valid indices
+            mask = np.zeros(len(boxes), dtype=bool)
+            mask[valid_indices] = True
+            # Filter boxes using the mask (YOLO Results supports boolean indexing)
+            result.boxes = result.boxes[mask]
+        else:
+            # No valid detections - create empty boxes
+            # We'll keep the result but with no boxes
+            result.boxes = None
+
+    return result
 
 
 def run_inference(
@@ -109,6 +185,14 @@ def run_inference(
             exist_ok=True,
         )
 
+        # Filter false positives (non-human objects)
+        logger.info("Filtering false positives (non-human objects)...")
+        filtered_results = []
+        for result in results:
+            filtered_result = filter_false_positives(result)
+            filtered_results.append(filtered_result)
+        results = filtered_results
+
         logger.info(f"Inference completed! Results saved to: {output_dir}/predictions")
 
         # If source is video or webcam, handle video output
@@ -130,7 +214,10 @@ def run_inference(
         if results:
             logger.info(f"Processed {len(results)} frame(s)")
             for i, result in enumerate(results):
-                logger.info(f"Frame {i+1}: {len(result.boxes)} detection(s)")
+                if result.boxes is not None:
+                    logger.info(f"Frame {i+1}: {len(result.boxes)} detection(s)")
+                else:
+                    logger.info(f"Frame {i+1}: 0 detection(s) (all filtered out)")
 
     except Exception as e:
         logger.error(f"Inference failed with error: {str(e)}", exc_info=True)
@@ -198,8 +285,19 @@ def process_video_stream(model, source, config, output_dir, device, logger):
                 verbose=False,
             )
 
-            # Annotate frame
-            annotated_frame = results[0].plot()
+            # Filter false positives
+            if results and len(results) > 0:
+                results[0] = filter_false_positives(results[0])
+
+                # Handle case where all detections were filtered out
+                if results[0].boxes is None:
+                    # Create empty result for plotting
+                    annotated_frame = frame.copy()
+                else:
+                    # Annotate frame
+                    annotated_frame = results[0].plot()
+            else:
+                annotated_frame = frame.copy()
 
             # Display if enabled (skip if GUI not available)
             if config["display"]["show"]:

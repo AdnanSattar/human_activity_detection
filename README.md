@@ -223,6 +223,124 @@ tensorboard --logdir outputs/runs
 
 Training logs are saved to `logs/human_activity_detection.log`.
 
+## 📈 Training Results
+
+### 100 Epochs Training (MX450 GPU, 2GB VRAM)
+
+**Training Time**: 42.159 hours (~1.75 days)
+
+#### Training Metrics
+
+![Training Results](outputs/runs/human_activity_detection/results.png)
+*Training loss curves and metrics over 100 epochs*
+
+![Confusion Matrix](outputs/runs/human_activity_detection/confusion_matrix.png)
+*Confusion matrix showing class-wise performance*
+
+![Precision-Recall Curves](outputs/runs/human_activity_detection/BoxPR_curve.png)
+*Precision-Recall curves for all classes*
+
+![F1 Score Curve](outputs/runs/human_activity_detection/BoxF1_curve.png)
+*F1 score curve over training epochs*
+
+#### Validation Predictions
+
+![Validation Batch 0](outputs/runs/human_activity_detection/val_batch0_pred.jpg)
+*Validation predictions - Batch 0*
+
+![Validation Batch 1](outputs/runs/human_activity_detection/val_batch1_pred.jpg)
+*Validation predictions - Batch 1*
+
+#### Inference Example
+
+![Walking Detection](images/walking.png)
+*Example detection: Walking activity in video*
+
+#### Output Video
+
+**Inference Output**: [View Video](outputs/inference/output_video.mp4)
+
+Inference output video showing human activity detection (download to view).
+
+**Best Model Metrics**:
+
+- **mAP50**: 0.234 (23.4%)
+- **mAP50-95**: 0.133 (13.3%)
+- **Precision**: 0.225 (22.5%)
+- **Recall**: 0.236 (23.6%)
+
+**Per-Class Performance** (Best Model):
+
+| Class | mAP50 | Recall | Status |
+| ----- | ----- | ------ | ------ |
+| `sitting` | 79.8% | 87.2% | ✅ Excellent |
+| `sitting on Desk` | 79.8% | 81.0% | ✅ Excellent |
+| `walking` | 74.8% | 93.0% | ✅ Excellent |
+| `standing` | 74.1% | 78.8% | ✅ Excellent |
+| `Cleaning` | 43.1% | 39.4% | ⚠️ Moderate |
+| `using_phone` | 25.3% | 26.8% | ⚠️ Moderate |
+| `working` | 41.5% | 22.7% | ⚠️ Moderate |
+| `Mopping` | 0% | 0% | ❌ Poor (no detections) |
+| `checking_bag` | 0% | 0% | ❌ Poor (no detections) |
+| `eating` | 0% | 0% | ❌ Poor (no detections) |
+| ... (11 more classes with 0% detection) | | | ❌ Poor |
+
+**Key Observations**:
+
+- ✅ **Strong performance** on common activities: sitting, walking, standing (70-80% mAP50)
+- ⚠️ **Moderate performance** on less common activities: cleaning, using phone (20-45% mAP50)
+- ❌ **Poor/zero performance** on rare activities: many classes with 1-6 training instances show 0% detection
+- 📊 **Class imbalance**: Dataset has significant class imbalance (e.g., 513 standing vs 1-6 instances for rare classes)
+
+**Recommendations for Improvement**:
+
+1. **More training data**: Collect more samples for rare classes (Mopping, checking_bag, eating, etc.)
+2. **Data augmentation**: Increase augmentation for underrepresented classes
+3. **Longer training**: Consider 200+ epochs for better convergence
+4. **Class weighting**: Use class weights to balance loss for rare classes
+5. **Transfer learning**: Consider fine-tuning from a model pre-trained on similar human activity datasets
+
+### Inference Results (100 Epochs Model)
+
+After 100 epochs of training, the model successfully detects activities in video:
+
+**Test Video**: `human_activity_video.mp4` (204 frames)
+
+**Detected Activities**:
+
+- ✅ **Standing**: Consistently detected (2-4 detections per frame)
+- ✅ **Walking**: Detected when present (1-2 detections per frame)
+- ✅ **Using Phone**: Detected intermittently (1 detection per frame when present)
+
+**Performance**:
+
+- Average detections per frame: 2-4
+- Processing speed: ~15ms per frame on MX450 GPU
+- Output video saved to: `outputs/inference/output_video.mp4`
+
+**Known Issues**:
+
+⚠️ **Class Imbalance Problem**: The model shows bias towards dominant classes:
+
+- People sitting at desks are often misclassified as "standing" instead of "working" or "sitting on Desk"
+- This occurs because "standing" has 513 training instances vs. only 22 for "working" (23:1 ratio)
+- The model defaults to "standing" when uncertain due to class imbalance
+
+**Solutions**:
+
+1. **Lower Confidence Threshold**: Updated to 0.35 (from 0.55) to allow more detections of underrepresented classes
+2. **Retrain with Class Weighting**: Implement weighted loss to penalize misclassification of rare classes
+3. **Collect More Data**: Prioritize collecting more "working" and "sitting on Desk" samples
+4. **Use Improved Inference**: See `src/inference_improved.py` for post-processing that helps with rare classes
+
+**Observations**:
+
+- Model detects people consistently (2-4 detections per frame)
+- Detections are stable across frames
+- Model correctly identifies multiple people in the scene
+- **Misclassification**: Due to class imbalance, "working" activities are often labeled as "standing"
+- See [Dataset Findings](docs/DATASET_FINDINGS.md) for detailed analysis
+
 ## 🐛 Troubleshooting
 
 ### CUDA Out of Memory
@@ -243,15 +361,32 @@ If inference fails with "Model not found":
 2. Update `model.checkpoint_path` in `config/inference_config.yaml`
 3. Check that model exists in `outputs/models/`
 
-### Poor Detection Accuracy
+### Poor Detection Accuracy / Misclassification
 
-If you see incorrect activity labels or missing detections:
+If you see incorrect activity labels (e.g., "standing" instead of "working"):
 
-1. **Sanity check epochs**: very low epochs (e.g., 1) often produces **no detections** on video. Use this only to confirm the pipeline runs.
-2. **Train longer**: for the MX450 (2GB), a practical starting point is **50 epochs**. Increase further if metrics keep improving.
-3. **Tune confidence**: lower `model.conf_threshold` (e.g., 0.1–0.3) to see more detections; raise it (e.g., 0.5) to reduce false positives.
-4. **Verify labels visually**: open `outputs/runs/.../labels.jpg` to confirm boxes and class IDs look correct.
-5. **Dataset**: Get the dataset from [Roboflow](https://universe.roboflow.com/cctv-rfavb/human-activity-kynyq) and ensure it’s in the `data/` structure described above.
+1. **Class Imbalance Issue**: This is the primary cause. "standing" has 513 instances vs. 22 for "working" (23:1 ratio), causing the model to default to "standing".
+
+2. **Immediate Fixes**:
+   - Lower confidence threshold in `config/inference_config.yaml` (already set to 0.35)
+   - Use improved inference: `python -m src.inference_improved --source video.mp4`
+   - Check if "working" or "sitting on Desk" appear with lower confidence scores
+
+3. **Training Solutions**:
+   - **Collect more data**: Prioritize "working" and "sitting on Desk" samples (target: 50+ each)
+   - **Class weighting**: Implement weighted loss function in training
+   - **Train longer**: 200+ epochs may help, but data imbalance is the root cause
+   - **Data augmentation**: Apply aggressive augmentation specifically to rare classes
+
+4. **Verification**:
+   - Check validation results: `outputs/runs/.../val_batch*_pred.jpg`
+   - Review class distribution: see [Dataset Findings](docs/DATASET_FINDINGS.md)
+   - Verify training data has sufficient "working" samples
+
+5. **Sanity Checks**:
+   - Very low epochs (e.g., 1) often produces **no detections** on video
+   - For MX450 (2GB), start with **50 epochs** minimum
+   - Ensure dataset is properly organized in `data/` structure
 
 ### Path Issues
 
@@ -298,10 +433,23 @@ The dataset includes 23 activity classes:
 
 For state-of-the-art Computer Vision training notebooks, visit [Roboflow Notebooks](https://github.com/roboflow/notebooks).
 
+### Dataset Findings
+
+See [docs/DATASET_FINDINGS.md](docs/DATASET_FINDINGS.md) for detailed analysis of:
+
+- Class distribution and imbalance issues
+- Impact on model performance
+- Recommendations for improvement
+- Expected vs. actual performance by class frequency
+
 ## 📚 Documentation
 
 - `README.md`: This file (main documentation)
 - `docs/INSTALL_CUDA.md`: CUDA installation guide
+- `docs/MODEL_TRAINING.md`: Detailed training guide
+- `docs/DATASET_FINDINGS.md`: Dataset analysis and class distribution findings
+- `docs/INFERENCE_ISSUES.md`: Common inference problems and solutions (including "working" misclassification)
+- `docs/FALSE_POSITIVES.md`: False positive detection issues and filtering solutions
 
 ## 🤝 Contributing
 

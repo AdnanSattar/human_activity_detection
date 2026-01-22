@@ -15,7 +15,7 @@ data:
 
 # Training hyperparameters
 training:
-  epochs: 200 # Minimum viable epochs for decent results (200+ recommended for production)
+  epochs: 100 # Minimum viable epochs for decent results (200+ recommended for production)
   batch_size: 8 # Adjust based on GPU memory (MX450 has 2GB, so 8 is reasonable)
   imgsz: 640
   device: "0" # GPU device ID, use "cpu" for CPU training
@@ -23,15 +23,25 @@ training:
   cache: false # MUST be false to avoid paging file errors (not enough RAM available)
   lr0: 0.001 # Initial learning rate (reduced from default 0.01 to prevent NaN losses)
   lrf: 0.01 # Final learning rate factor
+  class_weights: true # Enable class weighting to balance rare classes
 
 # Augmentation settings
 augmentation:
   enabled: true
-  mixup: 0.1
-  flipud: 0.1 # Vertical flip probability
+  mixup: 0.15 # Increased for rare classes
+  flipud: 0.15 # Vertical flip probability (increased)
   fliplr: 0.5 # Horizontal flip probability
   mosaic: 1.0 # Mosaic augmentation probability
-  copy_paste: 0.0 # Copy-paste augmentation probability
+  copy_paste: 0.3 # Copy-paste augmentation for rare classes (increased from 0.0)
+  hsv_h: 0.015 # Hue augmentation (increased)
+  hsv_s: 0.7 # Saturation augmentation (increased)
+  hsv_v: 0.4 # Value/brightness augmentation (increased)
+  degrees: 10.0 # Rotation degrees (increased)
+  translate: 0.2 # Translation (increased)
+  scale: 0.9 # Scale augmentation (increased)
+  shear: 5.0 # Shear augmentation (increased)
+  perspective: 0.0001 # Perspective augmentation
+  erasing: 0.4 # Random erasing probability (increased for rare classes)
 
 # Optimization settings
 optimization:

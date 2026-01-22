@@ -3,15 +3,15 @@
 # Model settings
 model:
   checkpoint_path: "outputs/models/Human_Activity_model.pt" # Path to trained model
-  conf_threshold: 0.3 # Confidence threshold for detections (balanced - lower for more detections, higher for accuracy)
-  iou_threshold: 0.45 # IoU threshold for NMS
+  conf_threshold: 0.65 # Confidence threshold for detections (balanced - higher reduces false positives but may miss rare classes)
+  iou_threshold: 0.6 # IoU threshold for NMS (increased to 0.6 to better remove overlapping false positives)
 
 # Input settings
 input:
   source: "data/test/images" # Can be: image path, video path, directory, webcam (0), or RTSP stream
   imgsz: 640 # Inference image size
   agnostic_nms: false # Class-agnostic NMS
-  max_det: 300 # Maximum number of detections per image
+  max_det: 10 # Maximum number of detections per image (reduced from 300 to limit false positives)
 
 # Output settings
 output:
