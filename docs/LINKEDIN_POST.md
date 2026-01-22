@@ -1,11 +1,10 @@
-
-From Dataset to Training & Inferance: Building Human Activity Detection System with YOLO**
+**🚀 From Dataset to Training & Inference: Building Human Activity Detection System with YOLO**
 
 After 100 epochs and 42 hours of training on MX450 GPU, I learned a hard lesson: **"Garbage in, garbage out" is absolutely true** in computer vision.
 
 **📊 The Dataset Reality Check**
 
-I started with a dataset of 2,291 images across 23 activity classes. Sounds good, right? 
+I started with a dataset of 2,291 images across 23 activity classes. Sounds good, right?
 
 Wrong. The class distribution was brutal:
 
@@ -43,12 +42,12 @@ The model defaulted to dominant classes when uncertain. Classic class imbalance 
 **📈 Key Learnings**
 
 1. **Data quality > Model architecture**: No amount of training can fix severe class imbalance
-3. **Validation metrics ≠ Real-world performance**: 41.5% mAP50 for "working" but 0% in practice
-4. **Post-processing is crucial**: Filtering false positives improved results significantly
-5. **Collect more data**: The highest priority fix is getting 50-100 samples per rare class (Mopping, checking_bag, eating, etc.)
-6. **Longer training**: Consider 200+ epochs for better convergence
-7. **Class weighting**: Use class weights to balance loss for rare classes
-8. **Transfer learning**: Consider fine-tuning from a model pre-trained on similar human activity datasets
+2. **Validation metrics ≠ Real-world performance**: 41.5% mAP50 for "working" but 0% in practice
+3. **Post-processing is crucial**: Filtering false positives improved results significantly
+4. **Collect more data**: The highest priority fix is getting 50-100 samples per rare class (Mopping, checking_bag, eating, etc.)
+5. **Longer training**: Consider 200+ epochs for better convergence
+6. **Class weighting**: Use class weights to balance loss for rare classes
+7. **Transfer learning**: Consider fine-tuning from a model pre-trained on similar human activity datasets
 
 **🎓 The Takeaway**
 
